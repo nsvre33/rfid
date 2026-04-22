@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFID Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #3c3c3c;
+        }
+        
+        h1 {
+            color: #4CAF50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #aaaaaa;
+            font-size: 1.1rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #2d2d2d 0%, #3a3a3a 100%);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid #3c3c3c;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value.total { color: #4CAF50; }
+        .stat-value.known { color: #2196F3; }
+        .stat-value.unknown { color: #f44336; }
+        
+        .stat-label {
+            color: #aaaaaa;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .scans-section {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #3c3c3c;
+        }
+        
+        .section-title {
+            color: #4CAF50;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .refresh-indicator {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #2d2d2d;
+        }
+        
+        thead {
+            background-color: #3c3c3c;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #3c3c3c;
+        }
+        
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        
+        tbody tr:hover {
+            background-color: #3a3a3a;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+        
+        .status-known {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+        
+        .status-unknown {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+        
+        .uid-cell {
+            font-family: 'Courier New', monospace;
+            color: #2196F3;
+            font-weight: bold;
+        }
+        
+        .time-cell {
+            color: #aaaaaa;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #3c3c3c;
+            border-top-color: #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .last-update {
+            text-align: right;
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 0.9rem;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📡 RFID Dashboard</h1>
+            <p class="subtitle">Система учёта RFID-меток в реальном времени</p>
+        </header>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value total" id="total-scans">0</div>
+                <div class="stat-label">Всего сканирований</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value known" id="known-scans">0</div>
+                <div class="stat-label">Известные карты</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value unknown" id="unknown-scans">0</div>
+                <div class="stat-label">Неизвестные карты</div>
+            </div>
+        </div>
+        
+        <div class="scans-section">
+            <h2 class="section-title">
+                📋 История сканирований
+                <span class="refresh-indicator">(обновление каждые 3 сек)</span>
+            </h2>
+            <div id="table-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px;">Загрузка данных...</p>
+                </div>
+            </div>
+            <div class="last-update" id="last-update"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '';
+        
+        async function fetchStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/stats`);
+                const data = await response.json();
+                
+                document.getElementById('total-scans').textContent = data.total || 0;
+                document.getElementById('known-scans').textContent = data.known || 0;
+                document.getElementById('unknown-scans').textContent = data.unknown || 0;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+        
+        async function fetchScans() {
+            try {
+                const response = await fetch(`${API_BASE}/api/scans?limit=50`);
+                const data = await response.json();
+                renderTable(data.scans || []);
+                updateLastRefresh();
+            } catch (error) {
+                console.error('Error fetching scans:', error);
+                document.getElementById('table-container').innerHTML = `
+                    <div class="loading">
+                        <p>Ошибка загрузки данных</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderTable(scans) {
+            if (!scans || scans.length === 0) {
+                document.getElementById('table-container').innerHTML = `
+                    <div class="loading">
+                        <p>Нет данных о сканированиях</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const reversed = [...scans].reverse();
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Время</th>
+                            <th>Дата</th>
+                            <th>UID</th>
+                            <th>ФИО</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            for (const scan of reversed) {
+                const statusClass = scan.status && scan.status.startsWith('✅') 
+                    ? 'status-known' 
+                    : 'status-unknown';
+                
+                html += `
+                    <tr>
+                        <td class="time-cell">${scan.time || '-'}</td>
+                        <td class="time-cell">${scan.date || '-'}</td>
+                        <td class="uid-cell">${scan.uid || '-'}</td>
+                        <td>${scan.fio || 'Неизвестно'}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                ${scan.status || 'Unknown'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            html += '</tbody></table>';
+            document.getElementById('table-container').innerHTML = html;
+        }
+        
+        function updateLastRefresh() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ru-RU');
+            document.getElementById('last-update').textContent = 
+                `Последнее обновление: ${timeStr}`;
+        }
+        
+        // Initial load
+        fetchStats();
+        fetchScans();
+        
+        // Auto-refresh every 3 seconds
+        setInterval(() => {
+            fetchStats();
+            fetchScans();
+        }, 3000);
+    </script>
+</body>
+</html>

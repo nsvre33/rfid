@@ -1,0 +1,24 @@
+{
+  "serial": {
+    "baudrate": 9600,
+    "timeout": 1.0,
+    "port_keywords": ["arduino", "ch340", "cp2102", "usb serial", "ftdi"]
+  },
+  "paths": {
+    "registry": "data/registry.xlsx",
+    "logs_dir": "data/logs",
+    "photos_dir": "data/photos"
+  },
+  "ui": {
+    "max_log_rows": 150
+  },
+  "web": {
+    "host": "0.0.0.0",
+    "port": 8000
+  },
+  "sounds": {
+    "enable": true,
+    "ok": "assets/ok.wav",
+    "err": "assets/err.wav"
+  }
+}
