@@ -1,35 +1,30 @@
 ```
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# PlatformIO build artifacts
+.piolibdeps/
+.platformio/
+*.pio/
+
+# Arduino build artifacts
+build/
+*.hex
+*.bin
+*.elf
 
 # Dependencies
-venv/
-.venv/
-env/
-ENV/
+lib/
+libs/
 
-# Logs
+# Logs and temp files
 *.log
+*.tmp
+*.swp
 
-# Excel files (assuming these are data/log files)
-*.xlsx
-
-# Environment variables
+# Environment
 .env
 .env.local
-*.env
+*.env.*
 
-# IDE
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# Build and distribution
-dist/
-build/
-*.egg-info/
 ```
